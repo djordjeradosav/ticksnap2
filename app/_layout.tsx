@@ -33,12 +33,7 @@ export default function RootLayout() {
 
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
-  
   const { isAuthenticated, loading: authLoading } = useAuth();
-
-  if (authLoading) {
-    return null; // Show splash screen
-  }
 
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
@@ -48,7 +43,7 @@ export default function RootLayout() {
   const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {
     setInsets(metrics.insets);
     setFrame(metrics.frame);
-  }, [setInsets, setFrame]);
+  }, []);
 
   useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -84,6 +79,11 @@ export default function RootLayout() {
       },
     };
   }, [initialInsets, initialFrame]);
+
+  // Show splash screen while auth is loading
+  if (authLoading) {
+    return null;
+  }
 
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
