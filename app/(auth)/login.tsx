@@ -81,10 +81,30 @@ export default function LoginScreen() {
             <TouchableOpacity
               className="bg-accent rounded-full py-4 px-6 active:opacity-80 mt-4"
               onPress={handleLogin}
-              disabled={loading}
+              disabled={loading || !email || !password}
             >
               <Text className="text-background font-bold text-center text-base">
                 {loading ? 'Logging in...' : 'Log in →'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Demo Account Button */}
+            <TouchableOpacity
+              className="border border-accent rounded-full py-3 px-6 active:opacity-80"
+              onPress={async () => {
+                setEmail('demo@example.com');
+                setPassword('Demo123!@#');
+                try {
+                  await signIn('demo@example.com', 'Demo123!@#');
+                  router.replace('/(tabs)');
+                } catch (err) {
+                  console.error('Demo login failed:', err);
+                }
+              }}
+              disabled={loading}
+            >
+              <Text className="text-accent font-semibold text-center text-base">
+                Try Demo Account
               </Text>
             </TouchableOpacity>
           </View>
@@ -93,10 +113,24 @@ export default function LoginScreen() {
           <View className="gap-3 mb-8">
             <Text className="text-center text-muted text-sm">Or continue with</Text>
             <View className="flex-row gap-3">
-              <TouchableOpacity className="flex-1 border border-border rounded-lg py-3 active:opacity-80">
+              <TouchableOpacity 
+                className="flex-1 border border-border rounded-lg py-3 active:opacity-80"
+                onPress={() => {
+                  // TODO: Implement Google OAuth via Supabase
+                  console.log('Google OAuth - coming soon');
+                }}
+                disabled={loading}
+              >
                 <Text className="text-foreground font-semibold text-center">Google</Text>
               </TouchableOpacity>
-              <TouchableOpacity className="flex-1 border border-border rounded-lg py-3 active:opacity-80">
+              <TouchableOpacity 
+                className="flex-1 border border-border rounded-lg py-3 active:opacity-80"
+                onPress={() => {
+                  // TODO: Implement Apple OAuth via Supabase
+                  console.log('Apple OAuth - coming soon');
+                }}
+                disabled={loading}
+              >
                 <Text className="text-foreground font-semibold text-center">Apple</Text>
               </TouchableOpacity>
             </View>

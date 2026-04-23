@@ -2,18 +2,21 @@
  * Settings Screen\n * App settings and preferences\n */
 
 import { ScrollView, Text, View, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { ScreenContainer } from '@/components/screen-container';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAuth } from '@/hooks/useAuth';
 import { useColors } from '@/hooks/use-colors';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const colors = useColors();
   const { signOut } = useAuth();
 
   const handleLogout = async () => {
     try {
       await signOut();
+      router.replace('/(auth)');
     } catch (err) {
       console.error('Logout failed:', err);
     }
