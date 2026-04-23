@@ -48,7 +48,7 @@ export default function RootLayout() {
   const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {
     setInsets(metrics.insets);
     setFrame(metrics.frame);
-  }, []);
+  }, [setInsets, setFrame]);
 
   useEffect(() => {
     if (Platform.OS !== "web") return;
