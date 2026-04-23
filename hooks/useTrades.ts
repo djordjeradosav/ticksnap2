@@ -41,9 +41,15 @@ export function useTrades(userId?: string) {
   };
 
   // Create trade
-  const createTrade = async (tradeData: Omit<Trade, 'id' | 'created_at' | 'likes_count' | 'comments_count'>) => {
+  const createTrade = async (tradeData: Omit<Trade, 'id' | 'created_at' | 'likes_count' | 'comments_count' | 'user_id'>) => {
     try {
-      const { data, error: err } = await supabase.from('trades').insert([tradeData]).select();
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) throw new Error('Not authenticated');
+      
+      const { data, error: err } = await supabase
+        .from('trades')
+        .insert([{ ...tradeData, user_id: userData.user.id }])
+        .select('*, user:profiles(username, full_name, avatar_url)');
       if (err) throw err;
       if (data) {
         setTrades([data[0], ...trades]);
@@ -86,9 +92,14 @@ export function useTrades(userId?: string) {
   };
 
   // Like trade
-  const likeTrade = async (tradeId: string, userId: string) => {
+  const likeTrade = async (tradeId: string) => {
     try {
-      const { error: err } = await supabase.from('likes').insert([{ trade_id: tradeId, user_id: userId }]);
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) throw new Error('Not authenticated');
+      
+      const { error: err } = await supabase
+        .from('likes')
+        .insert([{ trade_id: tradeId, user_id: userData.user.id }]);
       if (err && err.code !== '23505') throw err; // Ignore duplicate key error
       
       // Update likes count
@@ -104,13 +115,16 @@ export function useTrades(userId?: string) {
   };
 
   // Unlike trade
-  const unlikeTrade = async (tradeId: string, userId: string) => {
+  const unlikeTrade = async (tradeId: string) => {
     try {
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) throw new Error('Not authenticated');
+      
       const { error: err } = await supabase
         .from('likes')
         .delete()
         .eq('trade_id', tradeId)
-        .eq('user_id', userId);
+        .eq('user_id', userData.user.id);
       if (err) throw err;
       
       // Update likes count

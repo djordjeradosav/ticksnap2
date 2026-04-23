@@ -99,6 +99,7 @@ export default function RootLayout() {
               <Stack.Screen name="(auth)" />
             )}
             <Stack.Screen name="oauth/callback" />
+            <Stack.Screen name="create-trade" options={{ presentation: 'modal' }} />
           </Stack>
           <StatusBar style="auto" />
         </QueryClientProvider>

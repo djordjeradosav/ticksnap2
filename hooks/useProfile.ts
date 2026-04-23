@@ -27,13 +27,16 @@ export function useProfile(userId?: string) {
   };
 
   // Update profile
-  const updateProfile = async (id: string, updates: Partial<Profile>) => {
+  const updateProfile = async (updates: Partial<Profile>) => {
     try {
       setLoading(true);
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) throw new Error('Not authenticated');
+      
       const { data, error: err } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', id)
+        .eq('id', userData.user.id)
         .select()
         .single();
       if (err) throw err;
@@ -49,10 +52,14 @@ export function useProfile(userId?: string) {
   };
 
   // Follow user
-  const followUser = async (followingId: string, followerId: string) => {
+  const followUser = async (followingId: string) => {
     try {
+      setLoading(true);
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) throw new Error('Not authenticated');
+      
       const { error: err } = await supabase.from('follows').insert([
-        { follower_id: followerId, following_id: followingId },
+        { follower_id: userData.user.id, following_id: followingId },
       ]);
       if (err && err.code !== '23505') throw err; // Ignore duplicate key error
       
@@ -63,16 +70,22 @@ export function useProfile(userId?: string) {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to follow user';
       setError(message);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Unfollow user
-  const unfollowUser = async (followingId: string, followerId: string) => {
+  const unfollowUser = async (followingId: string) => {
     try {
+      setLoading(true);
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) throw new Error('Not authenticated');
+      
       const { error: err } = await supabase
         .from('follows')
         .delete()
-        .eq('follower_id', followerId)
+        .eq('follower_id', userData.user.id)
         .eq('following_id', followingId);
       if (err) throw err;
       
@@ -83,16 +96,21 @@ export function useProfile(userId?: string) {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to unfollow user';
       setError(message);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Check if following
-  const isFollowing = async (followingId: string, followerId: string): Promise<boolean> => {
+  const isFollowing = async (followingId: string): Promise<boolean> => {
     try {
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) return false;
+      
       const { data, error: err } = await supabase
         .from('follows')
         .select('*')
-        .eq('follower_id', followerId)
+        .eq('follower_id', userData.user.id)
         .eq('following_id', followingId)
         .single();
       if (err && err.code !== 'PGRST116') throw err; // PGRST116 = no rows found

@@ -1,57 +1,49 @@
 /**
  * useAuth Hook
- * Manages authentication state and Supabase session
+ * Manages authentication state and real Supabase session
  */
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { User } from '@supabase/supabase-js';
+
+export interface AuthUser {
+  id: string;
+  email: string | undefined;
+  username?: string;
+  phone?: string;
+  provider?: string;
+}
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Check current session
-    const checkSession = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        setUser(data?.session?.user ?? null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Auth error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkSession();
-
-    // Subscribe to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
-
-  const signUp = async (email: string, password: string, phone: string) => {
+  const signUp = async (email: string, password: string, phone: string, username?: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.signUp({
+      setError(null);
+      const { data, error: err } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { phone },
+          data: { phone, username },
         },
       });
-      if (error) throw error;
+      if (err) throw err;
+
+      // Create profile entry
+      if (data.user) {
+        await supabase.from('profiles').insert([
+          {
+            id: data.user.id,
+            username: username || email.split('@')[0],
+            full_name: username || '',
+            avatar_url: null,
+          },
+        ]);
+      }
+
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Sign up failed';
@@ -65,11 +57,12 @@ export function useAuth() {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
+      setError(null);
+      const { data, error: err } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (error) throw error;
+      if (err) throw err;
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Sign in failed';
@@ -83,8 +76,10 @@ export function useAuth() {
   const signOut = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      setError(null);
+      const { error: err } = await supabase.auth.signOut();
+      if (err) throw err;
+      setUser(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Sign out failed';
       setError(message);
@@ -97,10 +92,14 @@ export function useAuth() {
   const signInWithOAuth = async (provider: 'google' | 'apple') => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      setError(null);
+      const { data, error: err } = await supabase.auth.signInWithOAuth({
         provider,
+        options: {
+          redirectTo: 'ticksnap://auth/callback',
+        },
       });
-      if (error) throw error;
+      if (err) throw err;
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : `${provider} sign in failed`;
@@ -111,6 +110,52 @@ export function useAuth() {
     }
   };
 
+  useEffect(() => {
+    // Check current session
+    const checkSession = async () => {
+      try {
+        const { data, error: err } = await supabase.auth.getSession();
+        if (err) throw err;
+
+        if (data?.session?.user) {
+          setUser({
+            id: data.session.user.id,
+            email: data.session.user.email,
+            provider: data.session.user.app_metadata?.provider,
+          });
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Auth error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // Subscribe to auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            provider: session.user.app_metadata?.provider,
+          });
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
+
   return {
     user,
     loading,
@@ -120,5 +165,6 @@ export function useAuth() {
     signOut,
     signInWithOAuth,
     isAuthenticated: !!user,
+    clearError: () => setError(null),
   };
 }
