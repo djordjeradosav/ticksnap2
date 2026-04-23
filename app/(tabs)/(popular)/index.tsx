@@ -1,112 +1,120 @@
 /**
  * Popular Feed Screen
- * Main feed with daily news, tickers, traders, and best trades
+ * Main screen showing news, categories, and best trades
  */
 
 import { ScrollView, Text, View, TouchableOpacity, FlatList } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColors } from '@/hooks/use-colors';
+import { TickerBadge } from '@/components/TickerBadge';
+
+// Mock data
+const newsData = [
+  { id: '1', title: 'Unlimited. Forecast', subtitle: 'Watch unlimited number of trades at the same time' },
+];
+
+const categories = [
+  { id: '1', name: 'Big Bag', icon: '🟡', color: '#F5C518' },
+  { id: '2', name: 'Racks', icon: '🟢', color: '#00C087' },
+  { id: '3', name: 'Ticker', icon: '🟣', color: '#9C27B0' },
+  { id: '4', name: 'Wings', icon: '🔵', color: '#2196F3' },
+];
+
+const bestTrades = [
+  { id: '1', price: '+$45.00', ticker: 'EURGBP', trader: 'Kimmel' },
+  { id: '2', price: '+$32.50', ticker: 'GBPUSD', trader: 'Jessy' },
+  { id: '3', price: '+$28.00', ticker: 'EURUSD', trader: 'Dan' },
+];
 
 export default function PopularFeedScreen() {
-  const colors = useColors();
-
   return (
-    <ScreenContainer className="p-0" containerClassName="bg-background">
+    <ScreenContainer className="bg-white" containerClassName="bg-white">
       {/* Header */}
-      <View className="px-6 py-4 flex-row items-center justify-between">
-        <Text className="text-2xl font-bold text-accent">Ticksnap</Text>
-        <View className="flex-row gap-4">
-          <TouchableOpacity>
-            <IconSymbol name="magnifyingglass" size={24} color={colors.foreground} />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <IconSymbol name="bell.fill" size={24} color={colors.foreground} />
-          </TouchableOpacity>
-        </View>
+      <View className="flex-row items-center justify-between pb-4 border-b border-border px-4">
+        <Text className="text-2xl font-bold text-black">Ticksnap</Text>
+        <TouchableOpacity>
+          <Text className="text-2xl">🔔</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Main Content */}
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+      <ScrollView showsVerticalScrollIndicator={false} className="py-4">
         {/* Daily News Section */}
-        <View className="px-6 py-4 gap-3">
-          <Text className="text-lg font-bold text-foreground">Daily News</Text>
-          <FlatList
-            horizontal
-            data={[1, 2, 3]}
-            renderItem={({ item }) => (
-              <View className="w-48 h-32 bg-surface rounded-lg mr-3 p-3 gap-2">
-                <View className="w-full h-16 bg-border rounded-lg" />
-                <Text className="text-xs text-muted line-clamp-2">Market Update</Text>
-              </View>
-            )}
-            keyExtractor={(item) => item.toString()}
-            scrollEnabled={false}
-          />
+        <View className="mb-6 px-4">
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-base font-bold text-black">Daily News</Text>
+            <View className="flex-row gap-2">
+              <TouchableOpacity><Text className="text-lg">←</Text></TouchableOpacity>
+              <TouchableOpacity><Text className="text-lg">→</Text></TouchableOpacity>
+            </View>
+          </View>
+
+          {/* News Card */}
+          <View className="bg-black rounded-lg p-4 h-40 justify-between">
+            <View>
+              <Text className="text-white text-lg font-bold">Unlimited. Forecast</Text>
+              <Text className="text-white/70 text-sm mt-1">Watch unlimited number of trades at the same time</Text>
+            </View>
+            <View className="flex-row gap-1 justify-center">
+              <View className="w-2 h-2 rounded-full bg-accent" />
+              <View className="w-2 h-2 rounded-full bg-white/30" />
+              <View className="w-2 h-2 rounded-full bg-white/30" />
+            </View>
+          </View>
         </View>
 
-        {/* Stock News Section */}
-        <View className="px-6 py-4 gap-3">
-          <Text className="text-lg font-bold text-foreground">Stock News</Text>
+        {/* Category Icons */}
+        <View className="mb-6">
           <FlatList
             horizontal
-            data={['EUR/USD', 'MSFT', 'TSLA', 'AAPL', 'AMZN']}
+            showsHorizontalScrollIndicator={false}
+            data={categories}
+            keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <TouchableOpacity className="bg-surface rounded-full px-4 py-2 mr-2 active:opacity-80">
-                <Text className="text-sm font-semibold text-foreground">{item}</Text>
-              </TouchableOpacity>
-            )}
-            keyExtractor={(item) => item}
-            scrollEnabled={false}
-          />
-        </View>
-
-        {/* Traders Section */}
-        <View className="px-6 py-4 gap-3">
-          <Text className="text-lg font-bold text-foreground">Top Traders</Text>
-          <FlatList
-            horizontal
-            data={[1, 2, 3, 4, 5]}
-            renderItem={({ item }) => (
-              <View className="items-center mr-4 gap-2">
-                <View className="w-12 h-12 bg-accent rounded-full" />
-                <Text className="text-xs text-muted">Trader {item}</Text>
+              <View className="items-center mr-4" style={{ marginLeft: item.id === '1' ? 16 : 0 }}>
+                <TouchableOpacity
+                  className="w-16 h-16 rounded-lg items-center justify-center mb-2"
+                  style={{ backgroundColor: item.color }}
+                >
+                  <Text className="text-2xl">{item.icon}</Text>
+                </TouchableOpacity>
+                <Text className="text-xs font-semibold text-black text-center">{item.name}</Text>
               </View>
             )}
-            keyExtractor={(item) => item.toString()}
-            scrollEnabled={false}
+            scrollEnabled={true}
           />
         </View>
 
         {/* Best Today Section */}
-        <View className="px-6 py-4 gap-3">
-          <Text className="text-lg font-bold text-foreground">Best Today</Text>
+        <View className="mb-6 px-4">
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-base font-bold text-black">Best Today</Text>
+            <TouchableOpacity>
+              <Text className="text-lg text-black">→</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Best Trades Horizontal Scroll */}
           <FlatList
-            data={[1, 2, 3]}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={bestTrades}
+            keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <TouchableOpacity className="bg-card rounded-lg p-4 mb-3 border border-border active:opacity-80">
-                <View className="flex-row items-center gap-3 mb-3">
-                  <View className="w-10 h-10 bg-accent rounded-full" />
-                  <View className="flex-1">
-                    <Text className="text-sm font-semibold text-foreground">Trader Name</Text>
-                    <Text className="text-xs text-muted">2 hours ago</Text>
-                  </View>
+              <View className="mr-3">
+                <View className="bg-black rounded-lg w-32 h-24 justify-center items-center">
+                  <Text className="text-white text-xs">📊</Text>
                 </View>
-                <View className="flex-row items-center justify-between">
-                  <View>
-                    <Text className="text-sm font-semibold text-foreground">EUR/USD</Text>
-                    <Text className="text-xs text-success">+$125.50</Text>
-                  </View>
-                  <TouchableOpacity className="bg-accent rounded-full px-4 py-2 active:opacity-80">
-                    <Text className="text-background font-semibold text-xs">Like</Text>
-                  </TouchableOpacity>
+                <Text className="text-black font-bold text-sm mt-2">{item.price}</Text>
+                <View className="flex-row gap-1 mt-1">
+                  <TickerBadge label={item.ticker} size="sm" />
                 </View>
-              </TouchableOpacity>
+                <Text className="text-muted text-xs mt-1">by {item.trader}</Text>
+              </View>
             )}
-            keyExtractor={(item) => item.toString()}
-            scrollEnabled={false}
+            scrollEnabled={true}
           />
         </View>
+
+        <View className="h-20" />
       </ScrollView>
     </ScreenContainer>
   );
