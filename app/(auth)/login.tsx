@@ -11,16 +11,19 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn, loading, error } = useAuth();
+  const { signIn, isLoading, error } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleLogin = async () => {
     try {
+      setLocalError(null);
       await signIn(email, password);
-      router.replace('/(tabs)');
     } catch (err) {
-      console.error('Login failed:', err);
+      const message = err instanceof Error ? err.message : 'Login failed';
+      setLocalError(message);
+      console.error('Login error:', err);
     }
   };
 
@@ -37,9 +40,9 @@ export default function LoginScreen() {
           {/* Form */}
           <View className="gap-4 flex-1 justify-center">
             {/* Error Message */}
-            {error && (
+            {(localError || error) && (
               <View className="bg-error/10 border border-error rounded-lg p-3">
-                <Text className="text-error text-sm">{error}</Text>
+                <Text className="text-error text-sm">{localError || error?.message}</Text>
               </View>
             )}
 
@@ -52,7 +55,7 @@ export default function LoginScreen() {
                 placeholderTextColor="#888888"
                 value={email}
                 onChangeText={setEmail}
-                editable={!loading}
+                editable={!isLoading}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -67,7 +70,7 @@ export default function LoginScreen() {
                 placeholderTextColor="#888888"
                 value={password}
                 onChangeText={setPassword}
-                editable={!loading}
+                editable={!isLoading}
                 secureTextEntry
               />
             </View>
@@ -81,10 +84,10 @@ export default function LoginScreen() {
             <TouchableOpacity
               className="bg-accent rounded-full py-4 px-6 active:opacity-80 mt-4"
               onPress={handleLogin}
-              disabled={loading}
+              disabled={isLoading || !email || !password}
             >
               <Text className="text-background font-bold text-center text-base">
-                {loading ? 'Logging in...' : 'Log in →'}
+                {isLoading ? 'Logging in...' : 'Log in →'}
               </Text>
             </TouchableOpacity>
 
@@ -93,20 +96,19 @@ export default function LoginScreen() {
               className="border border-accent rounded-full py-3 px-6 active:opacity-80"
               onPress={async () => {
                 try {
-                  await signIn('demo@example.com', 'Demo123!@#');
-                  router.replace('/(tabs)');
+                  setLocalError(null);
+                  await signIn('demo@ticksnap.app', 'Demo1234!');
                 } catch (err) {
-                  console.error('Demo login failed:', err);
+                  const message = err instanceof Error ? err.message : 'Demo login failed';
+                  setLocalError(message);
                 }
               }}
-              disabled={loading}
+              disabled={isLoading}
             >
               <Text className="text-accent font-semibold text-center text-sm">
                 Try Demo Account
               </Text>
             </TouchableOpacity>
-
-
           </View>
 
           {/* OAuth Buttons */}
@@ -116,20 +118,18 @@ export default function LoginScreen() {
               <TouchableOpacity 
                 className="flex-1 border border-border rounded-lg py-3 active:opacity-80"
                 onPress={() => {
-                  // TODO: Implement Google OAuth via Supabase
                   console.log('Google OAuth - coming soon');
                 }}
-                disabled={loading}
+                disabled={isLoading}
               >
                 <Text className="text-foreground font-semibold text-center">Google</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 className="flex-1 border border-border rounded-lg py-3 active:opacity-80"
                 onPress={() => {
-                  // TODO: Implement Apple OAuth via Supabase
                   console.log('Apple OAuth - coming soon');
                 }}
-                disabled={loading}
+                disabled={isLoading}
               >
                 <Text className="text-foreground font-semibold text-center">Apple</Text>
               </TouchableOpacity>

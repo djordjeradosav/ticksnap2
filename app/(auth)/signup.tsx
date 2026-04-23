@@ -1,6 +1,6 @@
 /**
  * Sign Up Screen
- * User registration with email, password, and phone
+ * User registration with email, username, and password
  */
 
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -11,33 +11,25 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const { signUp, loading, error } = useAuth();
+  const { signUp, isLoading, error } = useAuth();
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleSignUp = async () => {
-    if (!email || !password || !phone) {
-      alert('Please fill in all fields');
-      return;
-    }
-    if (password !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
-    if (!agreedToTerms) {
-      alert('Please agree to the terms and privacy policy');
-      return;
-    }
     try {
-      await signUp(email, password, phone);
-      router.replace('/(tabs)');
+      setLocalError(null);
+      await signUp(email, username, password, fullName);
     } catch (err) {
-      console.error('Sign up failed:', err);
+      const message = err instanceof Error ? err.message : 'Sign up failed';
+      setLocalError(message);
+      console.error('Signup error:', err);
     }
   };
+
+  const isFormValid = email && username && password && password.length >= 8;
 
   return (
     <ScreenContainer className="p-6" containerClassName="bg-background">
@@ -46,17 +38,30 @@ export default function SignUpScreen() {
           {/* Header */}
           <View className="gap-2 mt-8">
             <Text className="text-4xl font-bold text-foreground">Create Account</Text>
-            <Text className="text-base text-muted">Join Ticksnap and start trading</Text>
+            <Text className="text-base text-muted">Join Ticksnap to share your trades</Text>
           </View>
 
           {/* Form */}
           <View className="gap-4 flex-1 justify-center">
             {/* Error Message */}
-            {error && (
+            {(localError || error) && (
               <View className="bg-error/10 border border-error rounded-lg p-3">
-                <Text className="text-error text-sm">{error}</Text>
+                <Text className="text-error text-sm">{localError || error?.message}</Text>
               </View>
             )}
+
+            {/* Full Name Input */}
+            <View className="gap-2">
+              <Text className="text-sm font-semibold text-foreground">Full Name (Optional)</Text>
+              <TextInput
+                className="bg-surface border border-border rounded-lg px-4 py-3 text-foreground"
+                placeholder="John Doe"
+                placeholderTextColor="#888888"
+                value={fullName}
+                onChangeText={setFullName}
+                editable={!isLoading}
+              />
+            </View>
 
             {/* Email Input */}
             <View className="gap-2">
@@ -67,24 +72,25 @@ export default function SignUpScreen() {
                 placeholderTextColor="#888888"
                 value={email}
                 onChangeText={setEmail}
-                editable={!loading}
+                editable={!isLoading}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
             </View>
 
-            {/* Phone Input */}
+            {/* Username Input */}
             <View className="gap-2">
-              <Text className="text-sm font-semibold text-foreground">Phone Number</Text>
+              <Text className="text-sm font-semibold text-foreground">Username</Text>
               <TextInput
                 className="bg-surface border border-border rounded-lg px-4 py-3 text-foreground"
-                placeholder="+1 (555) 000-0000"
+                placeholder="trader_pro"
                 placeholderTextColor="#888888"
-                value={phone}
-                onChangeText={setPhone}
-                editable={!loading}
-                keyboardType="phone-pad"
+                value={username}
+                onChangeText={setUsername}
+                editable={!isLoading}
+                autoCapitalize="none"
               />
+              <Text className="text-xs text-muted">3-20 characters, letters/numbers/underscores only</Text>
             </View>
 
             {/* Password Input */}
@@ -96,50 +102,20 @@ export default function SignUpScreen() {
                 placeholderTextColor="#888888"
                 value={password}
                 onChangeText={setPassword}
-                editable={!loading}
+                editable={!isLoading}
                 secureTextEntry
               />
+              <Text className="text-xs text-muted">At least 8 characters</Text>
             </View>
-
-            {/* Confirm Password Input */}
-            <View className="gap-2">
-              <Text className="text-sm font-semibold text-foreground">Confirm Password</Text>
-              <TextInput
-                className="bg-surface border border-border rounded-lg px-4 py-3 text-foreground"
-                placeholder="••••••••"
-                placeholderTextColor="#888888"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                editable={!loading}
-                secureTextEntry
-              />
-            </View>
-
-            {/* Terms Checkbox */}
-            <TouchableOpacity
-              className="flex-row items-center gap-3 py-2"
-              onPress={() => setAgreedToTerms(!agreedToTerms)}
-            >
-              <View
-                className={`w-5 h-5 rounded border-2 ${
-                  agreedToTerms ? 'bg-accent border-accent' : 'border-border'
-                }`}
-              >
-                {agreedToTerms && <Text className="text-background text-center">✓</Text>}
-              </View>
-              <Text className="text-sm text-muted flex-1">
-                By selecting this field you agree to Ticksnap's privacy policy and terms of services
-              </Text>
-            </TouchableOpacity>
 
             {/* Sign Up Button */}
             <TouchableOpacity
               className="bg-accent rounded-full py-4 px-6 active:opacity-80 mt-4"
               onPress={handleSignUp}
-              disabled={loading || !email || !password || !phone || password !== confirmPassword || !agreedToTerms}
+              disabled={isLoading || !isFormValid}
             >
               <Text className="text-background font-bold text-center text-base">
-                {loading ? 'Creating account...' : 'Complete sign up →'}
+                {isLoading ? 'Creating account...' : 'Complete sign up →'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -151,20 +127,18 @@ export default function SignUpScreen() {
               <TouchableOpacity 
                 className="flex-1 border border-border rounded-lg py-3 active:opacity-80"
                 onPress={() => {
-                  // TODO: Implement Google OAuth via Supabase
                   console.log('Google OAuth - coming soon');
                 }}
-                disabled={loading}
+                disabled={isLoading}
               >
                 <Text className="text-foreground font-semibold text-center">Google</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 className="flex-1 border border-border rounded-lg py-3 active:opacity-80"
                 onPress={() => {
-                  // TODO: Implement Apple OAuth via Supabase
                   console.log('Apple OAuth - coming soon');
                 }}
-                disabled={loading}
+                disabled={isLoading}
               >
                 <Text className="text-foreground font-semibold text-center">Apple</Text>
               </TouchableOpacity>
