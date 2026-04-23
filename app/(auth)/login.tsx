@@ -88,25 +88,7 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* Demo Account Button */}
-            <TouchableOpacity
-              className="border border-accent rounded-full py-3 px-6 active:opacity-80"
-              onPress={async () => {
-                setEmail('demo@example.com');
-                setPassword('Demo123!@#');
-                try {
-                  await signIn('demo@example.com', 'Demo123!@#');
-                  router.replace('/(tabs)');
-                } catch (err) {
-                  console.error('Demo login failed:', err);
-                }
-              }}
-              disabled={loading}
-            >
-              <Text className="text-accent font-semibold text-center text-base">
-                Try Demo Account
-              </Text>
-            </TouchableOpacity>
+
           </View>
 
           {/* OAuth Buttons */}
