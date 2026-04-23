@@ -1,183 +1,117 @@
 /**
  * useAuth Hook
- * Local authentication system that works without Supabase auth
+ * Email/password authentication using tRPC backend
  */
 
-import { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  username?: string;
-}
-
-// Demo accounts
-const DEMO_ACCOUNTS = [
-  {
-    id: 'demo-1',
-    email: 'demo@example.com',
-    password: 'Demo123!@#',
-    username: 'demo_trader',
-  },
-  {
-    id: 'test-1',
-    email: 'test@example.com',
-    password: 'Test1234!@#',
-    username: 'test_user',
-  },
-];
-
-const STORAGE_KEY = 'ticksnap_auth_user';
-const USERS_KEY = 'ticksnap_users';
+import { useCallback } from 'react';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { trpc } from '@/lib/trpc';
+import { useAuthStore } from '@/store/authStore';
 
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { user, token, setUser, setToken, clearAuth } = useAuthStore();
 
-  // Check session on mount
-  useEffect(() => {
-    checkSession();
-  }, []);
+  const loginMutation = trpc.auth.login.useMutation();
+  const signupMutation = trpc.auth.signup.useMutation();
+  const meMutation = trpc.auth.me.useQuery();
 
-  const checkSession = async () => {
-    try {
-      const storedUser = await AsyncStorage.getItem(STORAGE_KEY);
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      try {
+        const result = await loginMutation.mutateAsync({ email, password });
+        
+        // Store token
+        await SecureStore.setItemAsync('auth_token', result.token);
+        
+        // Update store
+        setToken(result.token);
+        setUser(result.user);
+        
+        // Redirect to tabs
+        router.replace('/(tabs)');
+        
+        return result;
+      } catch (error) {
+        console.error('Login failed:', error);
+        throw error;
       }
-    } catch (err) {
-      console.error('Session check error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [loginMutation, setToken, setUser, router]
+  );
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Check demo accounts
-      const demoAccount = DEMO_ACCOUNTS.find(
-        (acc) => acc.email === email && acc.password === password
-      );
-
-      if (demoAccount) {
-        const authUser: AuthUser = {
-          id: demoAccount.id,
-          email: demoAccount.email,
-          username: demoAccount.username,
-        };
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
-        setUser(authUser);
-        return { user: authUser };
+  const signUp = useCallback(
+    async (email: string, username: string, password: string, fullName?: string) => {
+      try {
+        const result = await signupMutation.mutateAsync({
+          email,
+          username,
+          password,
+          fullName,
+        });
+        
+        // Store token
+        await SecureStore.setItemAsync('auth_token', result.token);
+        
+        // Update store
+        setToken(result.token);
+        setUser(result.user);
+        
+        // Redirect to tabs
+        router.replace('/(tabs)');
+        
+        return result;
+      } catch (error) {
+        console.error('Signup failed:', error);
+        throw error;
       }
+    },
+    [signupMutation, setToken, setUser, router]
+  );
 
-      // Check registered users
-      const usersJson = await AsyncStorage.getItem(USERS_KEY);
-      const users = usersJson ? JSON.parse(usersJson) : [];
-
-      const registeredUser = users.find(
-        (u: any) => u.email === email && u.password === password
-      );
-
-      if (registeredUser) {
-        const authUser: AuthUser = {
-          id: registeredUser.id,
-          email: registeredUser.email,
-          username: registeredUser.username,
-        };
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
-        setUser(authUser);
-        return { user: authUser };
+  const signOut = useCallback(
+    async () => {
+      try {
+        // Clear token from storage
+        await SecureStore.deleteItemAsync('auth_token');
+        
+        // Clear store
+        clearAuth();
+        
+        // Redirect to auth
+        router.replace('/(auth)');
+      } catch (error) {
+        console.error('Logout failed:', error);
+        throw error;
       }
+    },
+    [clearAuth, router]
+  );
 
-      throw new Error('Invalid email or password');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login failed';
-      setError(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signUp = async (email: string, password: string, phone?: string, username?: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Check if email already exists
-      const demoExists = DEMO_ACCOUNTS.some((acc) => acc.email === email);
-      if (demoExists) {
-        throw new Error('Email already registered');
+  const refreshUser = useCallback(
+    async () => {
+      try {
+        const result = await meMutation.refetch();
+        if (result.data) {
+          setUser(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to refresh user:', error);
       }
-
-      const usersJson = await AsyncStorage.getItem(USERS_KEY);
-      const users = usersJson ? JSON.parse(usersJson) : [];
-
-      if (users.some((u: any) => u.email === email)) {
-        throw new Error('Email already registered');
-      }
-
-      // Create new user
-      const newUser = {
-        id: `user-${Date.now()}`,
-        email,
-        password,
-        phone: phone || '',
-        username: username || email.split('@')[0],
-      };
-
-      users.push(newUser);
-      await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
-
-      // Auto-login after signup
-      const authUser: AuthUser = {
-        id: newUser.id,
-        email: newUser.email,
-        username: newUser.username,
-      };
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
-      setUser(authUser);
-
-      return { user: authUser };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Signup failed';
-      setError(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      await AsyncStorage.removeItem(STORAGE_KEY);
-      setUser(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Logout failed';
-      setError(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const clearError = () => setError(null);
+    },
+    [meMutation, setUser]
+  );
 
   return {
     user,
-    loading,
-    error,
+    token,
     signIn,
     signUp,
     signOut,
-    isAuthenticated: !!user,
-    clearError,
+    refreshUser,
+    isLoading: loginMutation.isPending || signupMutation.isPending,
+    error: loginMutation.error || signupMutation.error,
+    isAuthenticated: !!user && !!token,
   };
 }
