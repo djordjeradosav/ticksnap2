@@ -28,12 +28,13 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
   const initialFrame = initialWindowMetrics?.frame ?? DEFAULT_WEB_FRAME;
 
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
+  
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   if (authLoading) {
     return null; // Show splash screen
