@@ -1,80 +1,52 @@
 /**
  * Welcome Screen
- * Entry point for unauthenticated users
+ * Yellow top half with Ticksnap branding, white bottom half with login/signup buttons
  */
 
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenContainer } from '@/components/screen-container';
-import { LinearGradient } from 'expo-linear-gradient';
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <ScreenContainer className="p-6 bg-background">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        <View className="flex-1 justify-between">
-          {/* Hero Section */}
-          <View className="flex-1 justify-center items-center gap-6 mt-12">
-            {/* Candlestick Chart Placeholder */}
-            <LinearGradient
-              colors={['#F5C518', '#FFD700']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="w-24 h-32 rounded-lg flex items-center justify-center"
-            >
-              <Text className="text-2xl font-bold text-background">📈</Text>
-            </LinearGradient>
-
-            {/* Logo & Tagline */}
-            <View className="items-center gap-2">
-              <Text className="text-5xl font-bold text-accent">Ticksnap</Text>
-              <Text className="text-base text-muted text-center">
-                Made for Traders by Traders
-              </Text>
-            </View>
-
-            {/* Description */}
-            <Text className="text-sm text-muted text-center leading-relaxed max-w-xs">
-              Share trades, follow top traders, and stay updated with real-time market insights.
-            </Text>
-          </View>
-
-          {/* CTA Buttons */}
-          <View className="gap-3 mb-8">
-            {/* Login Button */}
-            <TouchableOpacity 
-              onPress={() => router.push('/login')}
-              className="bg-accent rounded-full py-4 px-6 active:opacity-80"
-            >
-              <Text className="text-background font-bold text-center text-base">
-                Login to your account
-              </Text>
-            </TouchableOpacity>
-
-            {/* Sign Up Button */}
-            <TouchableOpacity 
-              onPress={() => router.push('/signup')}
-              className="border-2 border-accent rounded-full py-4 px-6 active:opacity-80"
-            >
-              <Text className="text-accent font-bold text-center text-base">
-                Create new account
-              </Text>
-            </TouchableOpacity>
-
-            {/* Demo Login Button */}
-            <TouchableOpacity 
-              onPress={() => router.push('/login')}
-              className="bg-surface border border-border rounded-full py-3 px-6 active:opacity-80 mt-2"
-            >
-              <Text className="text-muted text-center text-sm">
-                Try demo@example.com / Demo123!@#
-              </Text>
-            </TouchableOpacity>
-          </View>
+    <ScreenContainer edges={['top', 'left', 'right', 'bottom']} containerClassName="bg-background flex-1">
+      {/* Yellow Top Half */}
+      <View className="flex-1 bg-accent items-center justify-center px-6">
+        <Text className="text-5xl font-bold text-black mb-8">Ticksnap</Text>
+        
+        {/* Candlestick Chart Placeholder */}
+        <View className="w-24 h-24 bg-black rounded-lg mb-8 items-center justify-center">
+          <Text className="text-white text-3xl">📊</Text>
         </View>
-      </ScrollView>
+
+        <Text className="text-2xl font-bold text-black mb-2">Welcome to Ticksnap</Text>
+        <Text className="text-sm text-black/60">Made for Traders by Traders</Text>
+      </View>
+
+      {/* White Bottom Half */}
+      <View className="flex-1 bg-white items-center justify-center px-6 gap-4">
+        {/* Login Button - Black background, white text */}
+        <TouchableOpacity
+          className="w-full bg-black rounded-full py-4 active:opacity-80"
+          onPress={() => router.push('/login')}
+        >
+          <Text className="text-white font-bold text-center text-base">
+            Login to your account →
+          </Text>
+        </TouchableOpacity>
+
+        {/* Sign Up Button - White background, black border, black text */}
+        <TouchableOpacity
+          className="w-full bg-white border-2 border-black rounded-full py-4 active:opacity-80"
+          onPress={() => router.push('/signup')}
+        >
+          <Text className="text-black font-bold text-center text-base">
+            Create new account
+          </Text>
+        </TouchableOpacity>
+      </View>
     </ScreenContainer>
   );
 }

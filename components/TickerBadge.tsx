@@ -1,36 +1,25 @@
 /**
  * TickerBadge Component
- * Displays ticker symbol with color based on P&L
+ * Small pill-shaped badge for displaying ticker symbols
+ * Example: 🟢 Racks | 🇪🇺 EURGBP
  */
 
-import { Text, View } from 'react-native';
+import { View, Text } from 'react-native';
 
 interface TickerBadgeProps {
-  ticker: string;
-  profitLoss?: number;
-  size?: 'sm' | 'md' | 'lg';
+  icon?: string;
+  label: string;
+  size?: 'sm' | 'md';
 }
 
-export function TickerBadge({ ticker, profitLoss, size = 'md' }: TickerBadgeProps) {
-  const isProfit = profitLoss && profitLoss > 0;
-  const backgroundColor = isProfit ? '#00C087' : profitLoss ? '#FF4444' : '#F5C518';
-
-  const sizeClasses = {
-    sm: 'px-2 py-1 text-xs',
-    md: 'px-3 py-2 text-sm',
-    lg: 'px-4 py-3 text-base',
-  };
+export function TickerBadge({ icon, label, size = 'sm' }: TickerBadgeProps) {
+  const sizeClasses = size === 'sm' ? 'px-2 py-1' : 'px-3 py-2';
+  const textSize = size === 'sm' ? 'text-xs' : 'text-sm';
 
   return (
-    <View
-      className={`rounded-full ${sizeClasses[size]}`}
-      style={{ backgroundColor }}
-    >
-      <Text className="font-bold text-background text-center">
-        {ticker}
-        {profitLoss && profitLoss > 0 && ' ↑'}
-        {profitLoss && profitLoss < 0 && ' ↓'}
-      </Text>
+    <View className={`bg-surface border border-border rounded-full flex-row items-center gap-1 ${sizeClasses}`}>
+      {icon && <Text className="text-sm">{icon}</Text>}
+      <Text className={`text-black font-semibold ${textSize}`}>{label}</Text>
     </View>
   );
 }

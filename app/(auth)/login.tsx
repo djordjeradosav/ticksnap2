@@ -1,6 +1,6 @@
 /**
  * Login Screen
- * User login with email and password
+ * White background with form inputs and yellow button
  */
 
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -12,14 +12,15 @@ import { useAuth } from '@/hooks/useAuth';
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn, isLoading, error } = useAuth();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleLogin = async () => {
     try {
       setLocalError(null);
-      await signIn(email, password);
+      // Use username as email for now
+      await signIn(username, password);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
       setLocalError(message);
@@ -28,121 +29,65 @@ export default function LoginScreen() {
   };
 
   return (
-    <ScreenContainer className="p-6" containerClassName="bg-background">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        <View className="flex-1 justify-between">
-          {/* Header */}
-          <View className="gap-2 mt-8">
-            <Text className="text-4xl font-bold text-foreground">Welcome Back</Text>
-            <Text className="text-base text-muted">Log in to your Ticksnap account</Text>
-          </View>
+    <ScreenContainer className="bg-white" containerClassName="bg-white">
+      {/* Header */}
+      <View className="flex-row items-center gap-3 pb-4 border-b border-border">
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text className="text-2xl">←</Text>
+        </TouchableOpacity>
+        <Text className="text-lg font-bold text-black">Login</Text>
+      </View>
 
-          {/* Form */}
-          <View className="gap-4 flex-1 justify-center">
-            {/* Error Message */}
-            {(localError || error) && (
-              <View className="bg-error/10 border border-error rounded-lg p-3">
-                <Text className="text-error text-sm">{localError || error?.message}</Text>
-              </View>
-            )}
-
-            {/* Email Input */}
-            <View className="gap-2">
-              <Text className="text-sm font-semibold text-foreground">Email</Text>
-              <TextInput
-                className="bg-surface border border-border rounded-lg px-4 py-3 text-foreground"
-                placeholder="you@example.com"
-                placeholderTextColor="#888888"
-                value={email}
-                onChangeText={setEmail}
-                editable={!isLoading}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false} className="py-6">
+        <View className="gap-4 flex-1">
+          {/* Error Message */}
+          {(localError || error) && (
+            <View className="bg-error/10 border border-error rounded-lg p-3">
+              <Text className="text-error text-sm">{localError || error?.message}</Text>
             </View>
+          )}
 
-            {/* Password Input */}
-            <View className="gap-2">
-              <Text className="text-sm font-semibold text-foreground">Password</Text>
-              <TextInput
-                className="bg-surface border border-border rounded-lg px-4 py-3 text-foreground"
-                placeholder="••••••••"
-                placeholderTextColor="#888888"
-                value={password}
-                onChangeText={setPassword}
-                editable={!isLoading}
-                secureTextEntry
-              />
-            </View>
-
-            {/* Forgot Password Link */}
-            <TouchableOpacity>
-              <Text className="text-accent text-sm font-semibold">Forgot password?</Text>
-            </TouchableOpacity>
-
-            {/* Login Button */}
-            <TouchableOpacity
-              className="bg-accent rounded-full py-4 px-6 active:opacity-80 mt-4"
-              onPress={handleLogin}
-              disabled={isLoading || !email || !password}
-            >
-              <Text className="text-background font-bold text-center text-base">
-                {isLoading ? 'Logging in...' : 'Log in →'}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Demo Quick Login */}
-            <TouchableOpacity
-              className="border border-accent rounded-full py-3 px-6 active:opacity-80"
-              onPress={async () => {
-                try {
-                  setLocalError(null);
-                  await signIn('demo@ticksnap.app', 'Demo1234!');
-                } catch (err) {
-                  const message = err instanceof Error ? err.message : 'Demo login failed';
-                  setLocalError(message);
-                }
-              }}
-              disabled={isLoading}
-            >
-              <Text className="text-accent font-semibold text-center text-sm">
-                Try Demo Account
-              </Text>
-            </TouchableOpacity>
+          {/* Username Input */}
+          <View className="gap-2">
+            <TextInput
+              className="bg-surface rounded-lg px-4 py-3 text-black text-base"
+              placeholder="Username"
+              placeholderTextColor="#888888"
+              value={username}
+              onChangeText={setUsername}
+              editable={!isLoading}
+              autoCapitalize="none"
+            />
           </View>
 
-          {/* OAuth Buttons */}
-          <View className="gap-3 mb-8">
-            <Text className="text-center text-muted text-sm">Or continue with</Text>
-            <View className="flex-row gap-3">
-              <TouchableOpacity 
-                className="flex-1 border border-border rounded-lg py-3 active:opacity-80"
-                onPress={() => {
-                  console.log('Google OAuth - coming soon');
-                }}
-                disabled={isLoading}
-              >
-                <Text className="text-foreground font-semibold text-center">Google</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                className="flex-1 border border-border rounded-lg py-3 active:opacity-80"
-                onPress={() => {
-                  console.log('Apple OAuth - coming soon');
-                }}
-                disabled={isLoading}
-              >
-                <Text className="text-foreground font-semibold text-center">Apple</Text>
-              </TouchableOpacity>
-            </View>
+          {/* Password Input */}
+          <View className="gap-2">
+            <TextInput
+              className="bg-surface rounded-lg px-4 py-3 text-black text-base"
+              placeholder="Password"
+              placeholderTextColor="#888888"
+              value={password}
+              onChangeText={setPassword}
+              editable={!isLoading}
+              secureTextEntry
+            />
           </View>
 
-          {/* Sign Up Link */}
-          <View className="flex-row justify-center gap-1 mb-8">
-            <Text className="text-muted text-sm">Don't have an account?</Text>
-            <TouchableOpacity onPress={() => router.push('/signup')}>
-              <Text className="text-accent text-sm font-semibold">Sign up</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Forgot Password Link */}
+          <TouchableOpacity>
+            <Text className="text-muted text-sm">Forgot password?</Text>
+          </TouchableOpacity>
+
+          {/* Login Button - Yellow pill */}
+          <TouchableOpacity
+            className="bg-accent rounded-full py-4 px-6 active:opacity-80 mt-4"
+            onPress={handleLogin}
+            disabled={isLoading || !username || !password}
+          >
+            <Text className="text-black font-bold text-center text-base">
+              {isLoading ? 'Logging in...' : 'Login →'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </ScreenContainer>
