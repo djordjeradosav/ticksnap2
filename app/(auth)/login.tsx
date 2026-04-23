@@ -81,10 +81,28 @@ export default function LoginScreen() {
             <TouchableOpacity
               className="bg-accent rounded-full py-4 px-6 active:opacity-80 mt-4"
               onPress={handleLogin}
-              disabled={loading || !email || !password}
+              disabled={loading}
             >
               <Text className="text-background font-bold text-center text-base">
                 {loading ? 'Logging in...' : 'Log in →'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Demo Quick Login */}
+            <TouchableOpacity
+              className="border border-accent rounded-full py-3 px-6 active:opacity-80"
+              onPress={async () => {
+                try {
+                  await signIn('demo@example.com', 'Demo123!@#');
+                  router.replace('/(tabs)');
+                } catch (err) {
+                  console.error('Demo login failed:', err);
+                }
+              }}
+              disabled={loading}
+            >
+              <Text className="text-accent font-semibold text-center text-sm">
+                Try Demo Account
               </Text>
             </TouchableOpacity>
 

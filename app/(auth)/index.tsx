@@ -4,13 +4,15 @@
  */
 
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ScreenContainer } from '@/components/screen-container';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function WelcomeScreen() {
+  const router = useRouter();
+
   return (
-    <ScreenContainer className="p-6" containerClassName="bg-background">
+    <ScreenContainer className="p-6 bg-background">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         <View className="flex-1 justify-between">
           {/* Hero Section */}
@@ -42,22 +44,34 @@ export default function WelcomeScreen() {
           {/* CTA Buttons */}
           <View className="gap-3 mb-8">
             {/* Login Button */}
-            <Link href="/login" asChild>
-              <TouchableOpacity className="bg-accent rounded-full py-4 px-6 active:opacity-80">
-                <Text className="text-background font-bold text-center text-base">
-                  Login to your account
-                </Text>
-              </TouchableOpacity>
-            </Link>
+            <TouchableOpacity 
+              onPress={() => router.push('/login')}
+              className="bg-accent rounded-full py-4 px-6 active:opacity-80"
+            >
+              <Text className="text-background font-bold text-center text-base">
+                Login to your account
+              </Text>
+            </TouchableOpacity>
 
             {/* Sign Up Button */}
-            <Link href="/signup" asChild>
-              <TouchableOpacity className="border-2 border-accent rounded-full py-4 px-6 active:opacity-80">
-                <Text className="text-accent font-bold text-center text-base">
-                  Create new account
-                </Text>
-              </TouchableOpacity>
-            </Link>
+            <TouchableOpacity 
+              onPress={() => router.push('/signup')}
+              className="border-2 border-accent rounded-full py-4 px-6 active:opacity-80"
+            >
+              <Text className="text-accent font-bold text-center text-base">
+                Create new account
+              </Text>
+            </TouchableOpacity>
+
+            {/* Demo Login Button */}
+            <TouchableOpacity 
+              onPress={() => router.push('/login')}
+              className="bg-surface border border-border rounded-full py-3 px-6 active:opacity-80 mt-2"
+            >
+              <Text className="text-muted text-center text-sm">
+                Try demo@example.com / Demo123!@#
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
